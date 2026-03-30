@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
-// import ProtectedRoute from './components/ProtectedRoute'; // Use this for protected routes
+import ProtectedRoute from './components/ProtectedRoute';
 import Landing from './pages/Landing';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
@@ -25,11 +25,30 @@ function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/login" element={<Login />} />
               <Route path="/shop" element={<Shop />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/order-success" element={<OrderSuccess />} />
-              {/* Example of a protected route (optional bonus) */}
-              {/* You can add more protected routes here later */}
+              <Route 
+                path="/cart" 
+                element={
+                  <ProtectedRoute>
+                    <Cart />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/checkout" 
+                element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/order-success" 
+                element={
+                  <ProtectedRoute>
+                    <OrderSuccess />
+                  </ProtectedRoute>
+                } 
+              />
             </Routes>
           </main>
           <footer className="footer">

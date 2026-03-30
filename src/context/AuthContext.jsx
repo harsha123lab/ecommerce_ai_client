@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { login as loginService, signup as signupService, logout as logoutService } from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -7,42 +8,62 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in from localStorage
-    const loggedInUser = localStorage.getItem('currentUser');
-    if (loggedInUser) {
-      setUser(JSON.parse(loggedInUser));
+    // Check if user is already logged in from localStorage (token)
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    if (token && storedUser) {
+      setUser(JSON.parse(storedUser));
     }
     setLoading(false);
   }, []);
 
-  const login = (email) => {
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const foundUser = users.find((u) => u.email === email);
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('currentUser', JSON.stringify(foundUser));
-      return true;
+  const login = async (email, password) => {
+    try {
+      console.log('=== AUTHCONTEXT: Login attempt ===');
+      console.log('Email:', email);
+      const result = await loginService(email, password);
+      console.log('=== AUTHCONTEXT: Login result ===');
+      console.log('Result:', result);
+      
+      if (result.success) {
+        console.log('Setting user in context:', result.user);
+        setUser(result.user);
+        return { success: true, user: result.user };
+      }
+      console.error('Login failed:', result.message);
+      return { success: false, message: result.message || 'Login failed' };
+    } catch (error) {
+      console.error('=== AUTHCONTEXT: Login error ===');
+      console.error('Error:', error);
+      return { success: false, message: error.message || 'An error occurred during login' };
     }
-    return false;
   };
 
-  const signup = (name, email, password) => {
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const userExists = users.find((u) => u.email === email);
-    
-    if (userExists) {
-      return false; // User already exists
+  const signup = async (name, email, password) => {
+    try {
+      console.log('=== AUTHCONTEXT: Signup attempt ===');
+      console.log('Email:', email);
+      const result = await signupService(name, email, password);
+      console.log('=== AUTHCONTEXT: Signup result ===');
+      console.log('Result:', result);
+      
+      if (result.success) {
+        console.log('Signup successful!');
+        return { success: true, message: 'Account created successfully!' };
+      }
+      console.error('Signup failed:', result.message);
+      return { success: false, message: result.message || 'Signup failed' };
+    } catch (error) {
+      console.error('=== AUTHCONTEXT: Signup error ===');
+      console.error('Error:', error);
+      return { success: false, message: error.message || 'An error occurred during signup' };
     }
-
-    const newUser = { id: Date.now(), name, email, password };
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-    return true;
   };
 
   const logout = () => {
+    const result = logoutService();
     setUser(null);
-    localStorage.removeItem('currentUser');
+    return result;
   };
 
   return (

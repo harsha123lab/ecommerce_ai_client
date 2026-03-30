@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { authService } from '../services/authService';
 import './Auth.css';
 
 const Signup = () => {
@@ -54,19 +53,28 @@ const Signup = () => {
       return;
     }
 
-    // Signup using auth service
-    const result = authService.signup(formData.name, formData.email, formData.password);
+    try {
+      console.log('=== SIGNUP PAGE: Submitting form ===');
+      // Signup using auth context (which calls API)
+      const result = await signup(formData.name, formData.email, formData.password);
+      console.log('=== SIGNUP PAGE: Result received ===');
+      console.log('Result:', result);
 
-    if (result.success) {
-      // Also update the auth context
-      signup(formData.name, formData.email, formData.password);
-      // Redirect to login page
-      navigate('/login', { state: { message: 'Signup successful! Please login.' } });
-    } else {
-      setError(result.message);
+      if (result.success) {
+        console.log('Signup successful, redirecting to login...');
+        // Redirect to login page
+        navigate('/login', { state: { message: 'Signup successful! Please login.' } });
+      } else {
+        console.error('Signup failed:', result.message);
+        setError(result.message || 'Signup failed. Please try again.');
+      }
+    } catch (err) {
+      console.error('=== SIGNUP PAGE: Unexpected error ===');
+      console.error('Error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { authService } from '../services/authService';
 import './Auth.css';
 
 const Login = () => {
@@ -32,7 +31,7 @@ const Login = () => {
     setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
@@ -49,19 +48,28 @@ const Login = () => {
       return;
     }
 
-    // Login using auth service
-    const result = authService.login(formData.email, formData.password);
+    try {
+      console.log('=== LOGIN PAGE: Submitting form ===');
+      // Login using auth context (which calls API)
+      const result = await login(formData.email, formData.password);
+      console.log('=== LOGIN PAGE: Result received ===');
+      console.log('Result:', result);
 
-    if (result.success) {
-      // Update auth context
-      login(formData.email);
-      // Redirect to home page
-      navigate('/');
-    } else {
-      setError(result.message);
+      if (result.success) {
+        console.log('Login successful, redirecting...');
+        // Redirect to home page
+        navigate('/');
+      } else {
+        console.error('Login failed:', result.message);
+        setError(result.message || 'Invalid email or password');
+      }
+    } catch (err) {
+      console.error('=== LOGIN PAGE: Unexpected error ===');
+      console.error('Error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (

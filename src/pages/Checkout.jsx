@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { validateOrder, processPayment } from '../services/cartService';
+import { validateOrder, placeOrder } from '../services/cartService';
 import '../styles/Checkout.css';
 
 const Checkout = () => {
@@ -54,31 +54,18 @@ const Checkout = () => {
     setLoading(true);
 
     try {
-      // Process payment (mock)
-      const result = await processPayment({
-        cartItems,
-        total,
-        customerInfo: formData,
-      });
+      // Place order via API
+      const result = await placeOrder(formData);
 
       if (result.success) {
-        // Save order to localStorage
-        const orders = JSON.parse(localStorage.getItem('orders')) || [];
-        orders.push({
-          id: result.orderId,
-          date: new Date().toISOString(),
-          items: cartItems,
-          total,
-          customerInfo: formData,
-        });
-        localStorage.setItem('orders', JSON.stringify(orders));
-
         // Clear cart and redirect
-        clearCart();
+        await clearCart();
         navigate('/order-success', { state: { orderId: result.orderId } });
+      } else {
+        setError(result.message || 'Order placement failed. Please try again.');
       }
     } catch (err) {
-      setError('Payment processing failed. Please try again.');
+      setError('Order processing failed. Please try again.');
     } finally {
       setLoading(false);
     }
